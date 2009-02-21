@@ -59,6 +59,7 @@ module ModelBuilder
       columns.each do |name, type|
         table.column name, type
       end
+      table.timestamps
     end
 
     define_model_class(class_name, &block)

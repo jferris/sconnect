@@ -1,8 +1,7 @@
 module Sconnect
   class OrScope < ActiveRecord::NamedScope::Scope
 
-    attr_reader :proxy_scope, :left_scope, :right_scope
-    delegate :scopes, :with_scope, :to => :model
+    delegate :current_scoped_methods, :sanitize_sql, :to => :proxy_scope
 
     def initialize(left_scope)
       @left_scope  = left_scope.proxy_options
@@ -10,47 +9,42 @@ module Sconnect
     end
 
     def proxy_options
-      @proxy_options ||= inclusively_combine_scopes(left_scope, right_scope)
+      @proxy_options ||= inclusively_combine_scopes(@left_scope, @right_scope)
     end
 
     private
 
-    def inclusively_combine_scopes(*scopes)
-      # puts "Combining scopes: #{scopes.inspect}"
-
-      segments = scopes.collect do |scope|
-        model.send(:sanitize_sql, scope[:conditions])
-      end
-      conditions = "(#{segments.join(') OR (')})"
-
-      scopes.first.merge(:conditions => conditions)
+    def inclusively_combine_scopes(left, right)
+      exclusively_combine_scopes(left, right).
+        merge(:conditions => combine_conditions(left, right))
     end
 
-    def model
-      @model ||= proxy_scope
-      until @model.superclass == ActiveRecord::Base
-        @model = @model.proxy_scope
+    def exclusively_combine_scopes(left, right)
+      with_scope(:find => left) do
+        with_scope(:find => right) do
+          current_scoped_methods[:find]
+        end
       end
-      @model
+    end
+
+    def combine_conditions(*scopes)
+      segments = scopes.collect do |scope|
+        sanitize_sql(scope[:conditions])
+      end
+      conditions = "(#{segments.join(') OR (')})"
     end
 
     def method_missing(method, *args, &block)
-      # puts "#{method} called from #{caller.first}"
       if scopes.include?(method)
         right_scope = scopes[method].call(self, *args)
         if @right_scope
-          # puts "Combining with scope: #{method}"
           right_scope
         else
           @right_scope = right_scope.proxy_options
-          # puts "Setting right scope: #{@right_scope.inspect}"
           self
         end
       else
-        # puts "Calling #{method} on proxy with scope: #{proxy_options.inspect}"
-        with_scope :find => proxy_options, :create => proxy_options[:conditions].is_a?(Hash) ?  proxy_options[:conditions] : {} do
-          proxy_scope.send(method, *args, &block)
-        end
+        super(method, *args, &block)
       end
     end
   end

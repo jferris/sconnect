@@ -14,4 +14,8 @@ ActiveRecord::Base.establish_connection(
 
 ActiveRecord::Base.logger = Logger.new("#{SCONNECT_ROOT}/spec/spec.log")
 
+Spec::Runner.configure do |config|
+  config.include Matchers
+end
+
 require 'sconnect'

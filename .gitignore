@@ -2,5 +2,5 @@
 .swo
 *~
 *.log
-*.sqlite
+*.sqlite3
 rdoc
