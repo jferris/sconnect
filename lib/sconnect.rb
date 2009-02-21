@@ -1,6 +1,7 @@
 require 'sconnect/or'
 require 'sconnect/not'
 
+#:enddoc:
 module ActiveRecord
   class Base
     extend Sconnect::ActiveRecordClassExtensions

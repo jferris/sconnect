@@ -1,0 +1,45 @@
+= Sconnect
+
+Sconnect is an extension to ActiveRecord's named_scopes that allows you to combine scopes in more interesting and useful ways.
+
+== Download
+
+Github: http://github.com/jferris/sconnect/tree/master
+
+== Examples
+
+Given the following model:
+
+  class Post < ActiveRecord::Base
+    named_scope :published, :conditions => { :published => true }
+    named_scope :titled, :conditions => "title IS NOT NULL"
+    named_scope :from_today, lambda {
+      { :conditions => ['created_at >= ?', 1.day.ago] }
+    }
+  end
+
+ActiveRecord provides scope chains:
+
+  # All published posts with titles
+  Post.published.titled
+
+  # All published posts from today
+  Post.published.from_today
+
+Sconnect extends these scopes:
+
+  # All posts that are either published or titled
+  Post.published.or.titled
+
+  # All posts that are published but not created today
+  Post.published.not.from_today
+
+  # All posts that are either published or untitled
+  Post.published.or.not.titled
+
+  # All posts from today that are either published or titled
+  Post.published.or.titled.from_today
+
+== Author
+
+Sconnect was written by Joe Ferris.

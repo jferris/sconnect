@@ -1,5 +1,5 @@
-module Sconnect
-  class OrScope < ActiveRecord::NamedScope::Scope
+module Sconnect #:nodoc:
+  class OrScope < ActiveRecord::NamedScope::Scope #:nodoc:
 
     delegate :current_scoped_methods, :sanitize_sql, :to => :proxy_scope
 
@@ -50,6 +50,16 @@ module Sconnect
   end
 
   module ScopeExtensions
+    # Joins the left and right-hand scopes into an inclusive conditional clause. 
+    #
+    # Examples:
+    #
+    #   # Posts published or owned by the user
+    #   Post.published.or.owned_by(@user)
+    #
+    #   # Posts from today that are either published or owned by the given user
+    #   # (note that "or" binds tighter than the implicit "and")
+    #   Post.from_today.published.or.owned_by(@user)
     def or
       OrScope.new(self)
     end

@@ -1,5 +1,5 @@
-module Sconnect
-  class NotScope < ActiveRecord::NamedScope::Scope
+module Sconnect #:nodoc:
+  class NotScope < ActiveRecord::NamedScope::Scope #:nodoc:
 
     delegate :current_scoped_methods, :sanitize_sql, :to => :proxy_scope
 
@@ -37,6 +37,17 @@ module Sconnect
   end
 
   module ActiveRecordClassExtensions
+    # Inverts the conditions of the following scope.
+    #
+    # Examples:
+    #   # Returns all unpublished posts
+    #   Post.not.published 
+    #
+    #   # Returns all unpublished posts from today
+    #   Post.not.published.from_today
+    #
+    #   # Same as above
+    #   Post.from_today.not.published
     def not
       NotScope.new(self)
     end
