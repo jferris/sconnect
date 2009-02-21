@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "a model with several conditional named scopes and associations" do
+describe "Post" do
 
   include ModelBuilder
 
@@ -23,42 +23,87 @@ describe "a model with several conditional named scopes and associations" do
     end
   end
 
-  describe "chaining two conditional scopes together with or" do
-    before do
-      @published = Post.create!(:published => true,  :title => nil)
-      @titled    = Post.create!(:published => false, :title => 'Title')
-      @both      = Post.create!(:published => true,  :title => 'Title')
-      @neither   = Post.create!(:published => false, :title => nil)
-
-      @posts = Post.published.or.titled
+  describe "published.or.titled", :shared => true do
+    it "should find a published, untitled post" do
+      should include(Post.create!(:published => true,  :title => nil))
     end
 
-    it "should find a record from the first scope" do
-      @posts.should include(@published)
+    it "should find an unpublished, titled post" do
+      should include(Post.create!(:published => false, :title => 'Title'))
     end
 
-    it "should find a record from the second scope" do
-      @posts.should include(@titled)
+    it "should find a published, titled post" do
+      should include(Post.create!(:published => true,  :title => 'Title'))
     end
 
-    it "should find a record present in both scopes" do
-      @posts.should include(@both)
+    it "not should find an unpublished, untitled post" do
+      should_not include(Post.create!(:published => false, :title => nil))
     end
 
-    it "not should find a record not present in either scope" do
-      @posts.should_not include(@neither)
+    it "should use non-conditional options from .published.titled" do
+      should include_scope_options_from(Post.published.titled)
+    end
+  end
+
+  describe "from_today", :shared => true do
+    it "not find a post published two days ago" do
+      should_not include(Post.create!(:published  => true,
+                                      :title      => 'Title',
+                                      :created_at => 2.days.ago))
+    end
+  end
+
+  describe ".published.or.titled" do
+    subject { Post.published.or.titled }
+    it_should_behave_like "published.or.titled"
+    it { should be_chainable }
+  end
+
+  describe ".from_today.published.or.titled" do
+    subject { Post.from_today.published.or.titled }
+
+    it_should_behave_like "published.or.titled"
+    it_should_behave_like "from_today"
+    it { should be_chainable }
+  end
+
+  describe ".published.or.titled.from_today" do
+    subject { Post.published.or.titled.from_today }
+
+    it_should_behave_like "published.or.titled"
+    it_should_behave_like "from_today"
+    it { should be_chainable }
+  end
+
+  describe ".published.or.titled.or.from_today" do
+    subject { Post.published.or.titled.or.from_today }
+
+    it "should find a published, untitled post from today" do
+      should include(Post.create!(:published => true,  :title => nil))
     end
 
-    it "should return a chainable scope" do
-      @posts.class.instance_methods.should include('proxy_scope')
+    it "should find an unpublished, titled post from today" do
+      should include(Post.create!(:published => false, :title => 'Title'))
     end
 
-    it "should use non-conditional options from the first scope" do
-      @posts.should include_scope_options_from(Post.published)
+    it "should find a published, titled post from today" do
+      should include(Post.create!(:published => true,  :title => 'Title'))
     end
 
-    it "should use non-conditional options from the second scope" do
-      @posts.should include_scope_options_from(Post.titled)
+    it "should find an unpublished, untitled post from today" do
+      should include(Post.create!(:published => false, :title => nil))
     end
+
+    it "not should find an unpublished, untitled post from two days ago" do
+      should_not include(Post.create!(:published  => false,
+                                      :title      => nil,
+                                      :created_at => 2.days.ago))
+    end
+
+    it "should use non-conditional options from .published.titled" do
+      should include_scope_options_from(Post.published.titled)
+    end
+
+    it { should be_chainable }
   end
 end

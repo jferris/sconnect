@@ -1,13 +1,12 @@
 module Matchers
 
   class ScopeOptionsMatcher
-    def initialize(scope)
-      @expected_scope_options = scope.proxy_options.dup
-      @expected_scope_options.delete(:conditions)
+    def initialize(expected)
+      @expected_scope_options = scope_options(expected)
     end
 
     def matches?(target)
-      target_scope_options = target.proxy_options
+      target_scope_options = scope_options(target)
       @expected_scope_options.detect do |@key, expected_values|
         expected_values = [expected_values] unless expected_values.is_a?(Array)
         @target_values = target_scope_options[@key]
@@ -22,6 +21,14 @@ module Matchers
     def failure_message
       "Missing value #{@missing.inspect} for #{@key.inspect}" <<
         " (found values: #{@target_values.inspect})"
+    end
+
+    private
+
+    def scope_options(scope)
+      scope_options = scope.scope_options
+      scope_options.delete(:conditions)
+      scope_options
     end
   end
 
