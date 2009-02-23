@@ -106,4 +106,31 @@ describe "Post" do
 
     it { should be_chainable }
   end
+
+  describe ".published.or {|posts| posts.titled.from_today }" do
+    subject { Post.published.or {|posts| posts.titled.from_today } }
+
+    it "should find a published, untitled post from two days ago" do
+      should include(Post.create!(:published  => true,
+                                  :title      => nil,
+                                  :created_at => 2.days.ago))
+    end
+
+    it "should find an unpublished, titled post from today" do
+      should include(Post.create!(:published => false, :title => 'Title'))
+    end
+
+    it "should not find an unpublished, untitled post from today" do
+      should include(Post.create!(:published => false, :title => nil))
+    end
+
+    it "should not find a unpublished, titled post from two days ago" do
+      should_not include(Post.create!(:published  => false,
+                                      :title      => 'Title',
+                                      :created_at => 2.days.ago))
+    end
+
+    it { should be_chainable }
+  end
+
 end
